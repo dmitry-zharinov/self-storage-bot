@@ -3,14 +3,16 @@ import logging
 from telegram import Update, ReplyKeyboardMarkup, Bot
 from telegram.ext import (CallbackContext, CommandHandler, Dispatcher,
                           Filters, MessageHandler, Updater)
+from .bot_helpers import restricted, is_user_admin
 
-
-def get_main_menu() -> ReplyKeyboardMarkup:
+def get_main_menu(user_id) -> ReplyKeyboardMarkup:
     custom_keyboard = [
         ['Заказать аренду', 'Мои заказы'],
         ['Правила хранения', 'Частые вопросы (FAQ)'],
-        ['Панель администратора']
     ]
+    if is_user_admin(user_id):
+        custom_keyboard.append(['Панель администратора'])
+
     return ReplyKeyboardMarkup(custom_keyboard)
 
 
@@ -20,19 +22,21 @@ def get_hello_message() -> str:
 
 
 def start(update: Update, context: CallbackContext):
+    user_id = update.effective_user.id
     context.bot.send_message(
         chat_id=update.effective_chat.id,
         # text=get_hello_message()
         text='Добрый день! Это SelfStorageBot',
-        reply_markup=get_main_menu()
+        reply_markup=get_main_menu(user_id)
     )
 
 
 def return_to_main_menu(update: Update, context: CallbackContext):
+    user_id = update.effective_user.id
     context.bot.send_message(
         chat_id=update.effective_chat.id,
         text='Главное меню',
-        reply_markup=get_main_menu()
+        reply_markup=get_main_menu(user_id)
     )
 
 
@@ -143,9 +147,22 @@ def show_faq(update: Update, context: CallbackContext):
         reply_markup=ReplyKeyboardMarkup(custom_keyboard)
     )
 
-
+@restricted
 def open_admin_panel(update: Update, context: CallbackContext):
-    pass
+    # current_orders = admin_current_orders()
+    # overdue_orders = admin_overdue_orders()
+    # commercial_orders = get_commercial_orders()
+    
+    custom_keyboard = [
+        ['Текущие заказы'], ['Просроченные заказы'],
+        ['Эффективность рекламы'], ['Главное меню']
+    ]
+
+    context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text='Панель администратора',
+        reply_markup=ReplyKeyboardMarkup(custom_keyboard)
+    )
 
 
 def show_order_status(order_name: str,
@@ -167,7 +184,7 @@ def handle_menu_actions(update: Update, context: CallbackContext):
             'Завершённые заказы': show_complete_orders,
             'Правила хранения': show_rules,
             'Частые вопросы (FAQ)': show_faq,
-            'Панель администратора': open_admin_panel,
+            'Панель администратора': open_admin_panel
         }
         action = menu_actions[action_text]
         action(update, context)
