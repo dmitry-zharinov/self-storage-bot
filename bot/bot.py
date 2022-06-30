@@ -1,6 +1,6 @@
 import logging
 
-from telegram import Update, ReplyKeyboardMarkup, Bot, KeyboardButton
+from telegram import Update, ReplyKeyboardMarkup, Bot
 from telegram.ext import (CallbackContext, CommandHandler, Dispatcher,
                           Filters, MessageHandler, Updater)
 
@@ -37,21 +37,76 @@ def order_rental(update: Update, context: CallbackContext):
     context.bot.send_message(
         chat_id=update.effective_chat.id,
         text="""Закажите аренду на нашем складе по адресу: ...
-Доставка до склада бесплатна""",
-        reply_markup=ReplyKeyboardMarkup(custom_keyboard,
-                                         one_time_keyboard=True)
+Доставка до склада бесплатна.""",
+        reply_markup=ReplyKeyboardMarkup(custom_keyboard)
     )
+
+
+def make_order(update: Update, context: CallbackContext):
+    pass
+
+
+def get_active_orders():
+    pass
+
+
+def get_unpaid_orders():
+    pass
+
+
+def get_complete_orders():
+    pass
+
+
+def show_user_orders(update: Update, context: CallbackContext):
+    active_orders = get_active_orders()
+    unpaid_orders = get_unpaid_orders()
+    complete_orders = get_complete_orders()
+
+
+def get_rules_text() -> str:
+    pass
+
+
+def show_rules(update: Update, context: CallbackContext):
+    custom_keyboard = [
+        ['Главное меню']
+    ]
+    context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text=get_rules_text(),
+        reply_markup=ReplyKeyboardMarkup(custom_keyboard)
+    )
+
+
+def get_faq_text() -> str:
+    pass
+
+
+def show_faq(update: Update, context: CallbackContext):
+    custom_keyboard = [
+        ['Главное меню']
+    ]
+    context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text=get_faq_text(),
+        reply_markup=ReplyKeyboardMarkup(custom_keyboard)
+    )
+
+
+def open_admin_panel(update: Update, context: CallbackContext):
+    pass
 
 
 def handle_menu_actions(update: Update, context: CallbackContext):
     menu_actions = {
         'Главное меню': return_to_main_menu,
         'Заказать аренду': order_rental,
-        'Сделать заказ': '',
-        'Мои заказы': '',
-        'Правила хранения': '',
-        'Частые вопросы (FAQ)': '',
-        'Панель администратора': '',
+        'Сделать заказ': make_order,
+        'Мои заказы': show_user_orders,
+        'Правила хранения': show_rules,
+        'Частые вопросы (FAQ)': show_faq,
+        'Панель администратора': open_admin_panel,
     }
     action = menu_actions[update.message.text]
     action(update, context)
