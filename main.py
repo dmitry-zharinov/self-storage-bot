@@ -1,13 +1,12 @@
-import os
-
-from dotenv import load_dotenv
+from environs import Env
 
 from bot.bot import launch_bot
 
 
 def main():
-    load_dotenv()
-    bot_token = os.environ['BOT_TOKEN']
+    env = Env()
+    env.read_env()
+    bot_token = env('BOT_TOKEN')
     launch_bot(bot_token)
 
 
