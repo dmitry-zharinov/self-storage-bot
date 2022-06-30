@@ -15,7 +15,7 @@ def get_main_menu() -> ReplyKeyboardMarkup:
 
 
 def get_hello_message() -> str:
-    # TODO: грузить текст приветственного сообщения из БД
+    # TODO: грузить текст приветственного сообщения из JSON
     pass
 
 
@@ -37,7 +37,7 @@ def return_to_main_menu(update: Update, context: CallbackContext):
 
 
 def get_rental_terms_text() -> str:
-    # TODO: грузить текст условий заказа аренды из БД
+    # TODO: грузить текст условий заказа аренды из JSON
     pass
 
 
@@ -59,28 +59,59 @@ def make_order(update: Update, context: CallbackContext):
 
 
 def get_active_orders() -> list:
-    # TODO: грузить список названий текущих заказов из БД
+    # TODO: грузить список названий текущих заказов из JSON
     pass
 
 
 def get_unpaid_orders() -> list:
-    # TODO: грузить список названий неоплаченных заказов из БД
+    # TODO: грузить список названий неоплаченных заказов из JSON
     pass
 
 
 def get_complete_orders() -> list:
-    # TODO: грузить список названий завершённых заказов из БД
+    # TODO: грузить список названий завершённых заказов из JSON
     pass
 
 
 def show_user_orders(update: Update, context: CallbackContext):
-    active_orders = get_active_orders()
     unpaid_orders = get_unpaid_orders()
+    active_orders = get_active_orders()
     complete_orders = get_complete_orders()
+
+    if not (active_orders or unpaid_orders or complete_orders):
+        msg = 'Вы ещё не делали заказов.'
+    else:
+        msg = f"""У вас:
+{f'- {len(unpaid_orders)} неоплаченных заказов;' if unpaid_orders else None}
+{f'- {len(active_orders)} активных заказов;' if active_orders else None}
+{f'- {len(complete_orders)} завершённых заказов;' if complete_orders else None}
+"""
+    custom_keyboard = []
+    if unpaid_orders:
+        custom_keyboard.append(['Неоплаченные заказы'])
+    if active_orders:
+        custom_keyboard.append(active_orders)
+    if complete_orders:
+        custom_keyboard.append(['Завершённые заказы'])
+    custom_keyboard.append(['Главное меню'])
+
+    context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text=msg,
+        reply_markup=ReplyKeyboardMarkup(custom_keyboard)
+    )
+
+
+def show_unpaid_orders():
+    pass
+
+
+def show_complete_orders():
+    pass
 
 
 def get_rules_text() -> str:
-    # TODO: грузить текст правил хранения из БД
+    # TODO: грузить текст правил хранения из JSON
     pass
 
 
@@ -97,7 +128,7 @@ def show_rules(update: Update, context: CallbackContext):
 
 
 def get_faq_text() -> str:
-    # TODO: грузить текст частых вопросов из БД
+    # TODO: грузить текст частых вопросов из JSON
     pass
 
 
@@ -132,6 +163,8 @@ def handle_menu_actions(update: Update, context: CallbackContext):
             'Заказать аренду': order_rental,
             'Сделать заказ': make_order,
             'Мои заказы': show_user_orders,
+            'Неоплаченные заказы': show_unpaid_orders,
+            'Завершённые заказы': show_complete_orders,
             'Правила хранения': show_rules,
             'Частые вопросы (FAQ)': show_faq,
             'Панель администратора': open_admin_panel,
