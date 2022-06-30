@@ -1,16 +1,28 @@
 import logging
 
-from telegram import Update
+from telegram import Update, ReplyKeyboardMarkup
 from telegram.ext import (CallbackContext, CommandHandler, Filters,
                           MessageHandler, Updater)
 
 
 def start(update: Update, context: CallbackContext):
-    context.bot.send_message(chat_id=update.effective_chat.id, text="Добрый день! Это SelfStorageBot")
+    context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text="Добрый день! Это SelfStorageBot",
+        reply_markup=get_main_menu())
 
 
 def echo(update: Update, context: CallbackContext):
-    context.bot.send_message(chat_id=update.effective_chat.id, text=update.message.text)
+    context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text=update.message.text)
+
+
+def get_main_menu():
+    custom_keyboard = [['Заказать аренду', 'Мои заказы'], 
+                    ['Правила хранения', 'Частые вопросы (FAQ)'],
+                    ['Панель администратора']]
+    return ReplyKeyboardMarkup(custom_keyboard)
 
 
 def launch_bot(token):
