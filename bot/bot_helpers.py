@@ -2,8 +2,12 @@ import json
 from functools import wraps
 from pathlib import Path
 
-# TODO: читать администраторов из json
-LIST_OF_ADMINS = [12345678, 87654321, 511727477]
+from environs import Env
+
+env = Env()
+env.read_env()
+
+LIST_OF_ADMINS = list(map(int, env.list('LIST_OF_ADMINS'))) 
 DATA_FOLDER = 'data'
 
 
@@ -21,7 +25,6 @@ def restricted(func):
 
 def is_user_admin(user_id: int):
     """Проверка: пользователь является администратором?"""
-    print(user_id)
     if user_id in LIST_OF_ADMINS:
         return True
     return False
