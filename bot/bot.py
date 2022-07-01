@@ -1,9 +1,11 @@
 import logging
 
-from telegram import Update, ReplyKeyboardMarkup, Bot
-from telegram.ext import (CallbackContext, CommandHandler, Dispatcher,
-                          Filters, MessageHandler, Updater)
-from .bot_helpers import restricted, is_user_admin
+from telegram import Bot, ReplyKeyboardMarkup, Update, ParseMode
+from telegram.ext import (CallbackContext, CommandHandler, Dispatcher, Filters,
+                          MessageHandler, Updater)
+
+from .bot_helpers import is_user_admin, restricted, read_json
+
 
 def get_main_menu(user_id) -> ReplyKeyboardMarkup:
     custom_keyboard = [
@@ -132,27 +134,42 @@ def show_rules(update: Update, context: CallbackContext):
 
 
 def get_faq_text() -> str:
-    # TODO: грузить текст частых вопросов из JSON
-    pass
+    faq = read_json('faq.json')
+    faq_text = '\n'.join(f'<b>{question}</b>\n{answer}\n'
+                         for question, answer in faq.items())
+    return faq_text
 
 
 def show_faq(update: Update, context: CallbackContext):
     custom_keyboard = [
         ['Главное меню']
     ]
-    context.bot.send_message(
-        chat_id=update.effective_chat.id,
-        # text=get_faq_text(),
-        text='Частые вопросы',
-        reply_markup=ReplyKeyboardMarkup(custom_keyboard)
-    )
+
+    faq_text = get_faq_text()
+    msg_len = len(faq_text)
+    if msg_len > 4096:
+        for x in range(0, msg_len, 4096):
+            context.bot.send_message(
+                chat_id=update.effective_chat.id,
+                text=faq_text[x:x+4096],
+                parse_mode=ParseMode.HTML,
+                reply_markup=ReplyKeyboardMarkup(custom_keyboard)
+            )
+    else:
+        context.bot.send_message(
+            chat_id=update.effective_chat.id,
+            text=faq_text,
+            parse_mode=ParseMode.HTML,
+            reply_markup=ReplyKeyboardMarkup(custom_keyboard)
+        )
+
 
 @restricted
 def open_admin_panel(update: Update, context: CallbackContext):
     # current_orders = admin_current_orders()
     # overdue_orders = admin_overdue_orders()
     # commercial_orders = get_commercial_orders()
-    
+
     custom_keyboard = [
         ['Текущие заказы'], ['Просроченные заказы'],
         ['Эффективность рекламы'], ['Главное меню']
