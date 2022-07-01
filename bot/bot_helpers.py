@@ -13,7 +13,7 @@ def restricted(func):
     def wrapped(update, context, *args, **kwargs):
         user_id = update.effective_user.id
         if not is_user_admin(user_id):
-            print("Нет прав доступа для user_id {}.".format(user_id))
+            print(f'Нет прав доступа для user_id {user_id}.')
             return
         return func(update, context, *args, **kwargs)
     return wrapped
@@ -29,7 +29,7 @@ def is_user_admin(user_id: int):
 
 def read_json(filename: str):
     """Десереализовать JSON"""
-    with open(Path.cwd() / Path(DATA_FOLDER) / filename, "r",
-              encoding='utf8') as file_:
+    with open(Path.cwd() / Path(DATA_FOLDER) / filename,
+              'r', encoding='utf8') as file_:
         file_json = file_.read()
     return json.loads(file_json)

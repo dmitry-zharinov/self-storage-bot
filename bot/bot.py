@@ -7,6 +7,17 @@ from telegram.ext import (CallbackContext, CommandHandler, Dispatcher, Filters,
 from .bot_helpers import is_user_admin, restricted, read_json
 
 
+FILLING_ORDER = {
+    # 'order_id' - это ключи в словаре, записываемом в orders.json
+    'user_id': '',
+    'stotage_size': '',
+    'storage_time': '',
+    'feedback': '',
+    'need_delivery': '',
+    'client_address': ''
+}
+
+
 def get_main_menu(user_id) -> ReplyKeyboardMarkup:
     custom_keyboard = [
         ['Заказать аренду', 'Мои заказы'],
@@ -60,7 +71,40 @@ def order_rental(update: Update, context: CallbackContext):
     )
 
 
-def make_order(update: Update, context: CallbackContext):
+def choose_storage_size(update: Update, context: CallbackContext):
+    custom_keyboard = [
+        ['Менее половины комнаты', 'Комната'],
+        ['2-комнатная квартира', '3-комнатная квартира'],
+        ['Выбрать размер позже']
+    ]
+    context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text='Пожалуйста, выберите примерный объём вещей',
+        reply_markup=ReplyKeyboardMarkup(custom_keyboard)
+    )
+
+
+def choose_storage_time(update: Update, context: CallbackContext):
+    msg = ''
+    storage_size = update.message.text
+    if storage_size == 'Выбрать размер позже':
+        msg = 'Вы сможете уточнить объём вещей' \
+              'при обсуждении заказа с менеджером.\n'
+    else:
+        FILLING_ORDER['storage_size'] = storage_size
+    custom_keyboard = [
+        ['1 месяц', '3 месяца'],
+        ['Полгода', 'Год и более'],
+        ['Выбрать время позже']
+    ]
+    context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text=f'{msg}Пожалуйста, выберите примерный срок хранения',
+        reply_markup=ReplyKeyboardMarkup(custom_keyboard)
+    )
+
+
+def get_feedback(update: Update, context: CallbackContext):
     pass
 
 
@@ -84,7 +128,7 @@ def show_user_orders(update: Update, context: CallbackContext):
     active_orders = get_active_orders()
     complete_orders = get_complete_orders()
 
-    if not (active_orders or unpaid_orders or complete_orders):
+    if not (unpaid_orders or active_orders or complete_orders):
         msg = 'Вы ещё не делали заказов.'
     else:
         msg = f"""У вас:
@@ -187,24 +231,51 @@ def show_order_status(order_name: str,
     pass
 
 
+def is_contact(msg: str) -> bool:
+    return msg.startswith('+') or '@' in msg
+
+
 def handle_menu_actions(update: Update, context: CallbackContext):
+    menu_actions = {
+        'Главное меню': return_to_main_menu,
+        ###
+        'Заказать аренду': order_rental,
+        'Сделать заказ': choose_storage_size,
+        ###
+        'Менее половины комнаты': choose_storage_time,
+        'Комната': choose_storage_time,
+        '2-комнатная квартира': choose_storage_time,
+        '3-комнатная квартира': choose_storage_time,
+        'Выбрать размер позже': choose_storage_time,
+        ###
+        '1 месяц': get_feedback,
+        '3 месяца': get_feedback,
+        'Полгода': get_feedback,
+        'Год и более': get_feedback,
+        'Выбрать время позже': get_feedback,
+        ###
+        'Мои заказы': show_user_orders,
+        'Неоплаченные заказы': show_unpaid_orders,
+        'Завершённые заказы': show_complete_orders,
+        ###
+        'Правила хранения': show_rules,
+        'Частые вопросы (FAQ)': show_faq,
+        ###
+        'Панель администратора': open_admin_panel,
+    }
     action_text = update.message.text
     if action_text.startswith('#'):
         show_order_status(action_text, update, context)
-    else:
-        menu_actions = {
-            'Главное меню': return_to_main_menu,
-            'Заказать аренду': order_rental,
-            'Сделать заказ': make_order,
-            'Мои заказы': show_user_orders,
-            'Неоплаченные заказы': show_unpaid_orders,
-            'Завершённые заказы': show_complete_orders,
-            'Правила хранения': show_rules,
-            'Частые вопросы (FAQ)': show_faq,
-            'Панель администратора': open_admin_panel
-        }
+    elif is_contact(action_text):
+        pass
+    elif action_text in menu_actions:
         action = menu_actions[action_text]
         action(update, context)
+    else:
+        context.bot.send_message(
+            chat_id=update.effective_chat.id,
+            text='Пожалуйста, выберите действие из меню'
+        )
 
 
 def launch_bot(token):
