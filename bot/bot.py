@@ -19,16 +19,16 @@ def get_main_menu(user_id) -> ReplyKeyboardMarkup:
 
 
 def get_hello_message() -> str:
-    # TODO: грузить текст приветственного сообщения из JSON
-    pass
+    hello_message = read_json('hello.json')['hello']
+    return hello_message
 
 
 def start(update: Update, context: CallbackContext):
     user_id = update.effective_user.id
     context.bot.send_message(
         chat_id=update.effective_chat.id,
-        # text=get_hello_message()
-        text='Добрый день! Это SelfStorageBot',
+        text=get_hello_message(),
+        parse_mode=ParseMode.HTML,
         reply_markup=get_main_menu(user_id)
     )
 
