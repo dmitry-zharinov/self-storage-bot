@@ -9,6 +9,7 @@ DATA_FOLDER = 'data'
 
 def restricted(func):
     """Запрет доступа к обработчику для не-администраторов"""
+
     @wraps(func)
     def wrapped(update, context, *args, **kwargs):
         user_id = update.effective_user.id
@@ -16,10 +17,11 @@ def restricted(func):
             print(f'Нет прав доступа для user_id {user_id}.')
             return
         return func(update, context, *args, **kwargs)
+
     return wrapped
 
 
-def is_user_admin(user_id: int):
+def is_user_admin(user_id: int) -> bool:
     """Проверка: пользователь является администратором?"""
     print(user_id)
     if user_id in LIST_OF_ADMINS:
@@ -33,3 +35,18 @@ def read_json(filename: str):
               'r', encoding='utf8') as file_:
         file_json = file_.read()
     return json.loads(file_json)
+
+
+def write_json(data, filename: str):
+    """Сереализовать JSON"""
+    with open(Path.cwd() / Path(DATA_FOLDER) / filename,
+              'w', encoding='utf8') as file_:
+        file_.write(json.dumps(data, indent=4, ensure_ascii=False))
+
+
+def get_doc(filename: str):
+    """Считать и вернуть бинарный файл"""
+    with open(Path.cwd() / Path(DATA_FOLDER) / filename,
+              'rb', encoding='utf8') as file_:
+        doc = file_.read()
+    return doc
