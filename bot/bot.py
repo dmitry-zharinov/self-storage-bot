@@ -29,10 +29,6 @@ created_orders = []  # значение - словарь заказа
 # }
 
 
-def prepare_order(update: Update):
-    filling_orders[update.effective_user.id] = dict()
-
-
 def fill_in_field(update: Update, field: str, value):
     filling_orders[update.effective_user.id][field] = value
 
@@ -107,7 +103,7 @@ def order_rental(update: Update, context: CallbackContext):
 
 
 def choose_storage_size(update: Update, context: CallbackContext):
-    prepare_order(update)
+    filling_orders[update.effective_user.id] = dict()
     custom_keyboard = [
         ['Менее половины комнаты', 'Комната'],
         ['2-комнатная квартира', '3-комнатная квартира'],
@@ -212,8 +208,9 @@ def confirm_order(feedback: str, update: Update, context: CallbackContext):
 
 
 def send_order(update: Update, context: CallbackContext):
-    created_orders.append(filling_orders[update.effective_user.id])
-    del filling_orders[update.effective_user.id]
+    user_id = update.effective_user.id
+    created_orders.append(filling_orders[user_id])
+    del filling_orders[user_id]
     if not filling_orders:
         store_created_orders(created_orders)
         created_orders.clear()
@@ -221,7 +218,7 @@ def send_order(update: Update, context: CallbackContext):
     context.bot.send_message(
         chat_id=update.effective_chat.id,
         text=msg,
-        reply_markup=get_main_menu(update.effective_user.id)
+        reply_markup=get_main_menu(user_id)
     )
 
 
