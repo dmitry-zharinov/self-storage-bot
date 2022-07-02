@@ -18,7 +18,7 @@ It is the file to contain environmental variables that usually store data unique
 2. Copy and paste this to `.env` file:
 ```dotenv
 BOT_TOKEN={telegram_bot_token}
-LIST_OF_ADMINS={user_id_1,user_id_2}
+LIST_OF_ADMINS='{user_id_1,user_id_2}'
 ```
 3. Replace `{telegram_token}` with API token for the Telegram bot you have created with the help of [BotFather](https://telegram.me/BotFather). This token will look something like this: `958423683:AAEAtJ5Lde5YYfkjergber`.
 4. Replace `{user_id_1,user_id_2}` with Telegram user ids with admin privilegies.

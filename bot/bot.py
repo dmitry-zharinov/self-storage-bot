@@ -275,8 +275,9 @@ def show_complete_orders():
 
 
 def get_rules_text() -> str:
-    # TODO: грузить текст правил хранения из JSON
-    pass
+    rules: list = read_json('rules.json')
+    rules_text = '\n'.join(rules)
+    return rules_text
 
 
 def show_rules(update: Update, context: CallbackContext):
@@ -285,8 +286,7 @@ def show_rules(update: Update, context: CallbackContext):
     ]
     context.bot.send_message(
         chat_id=update.effective_chat.id,
-        # text=get_rules_text(),
-        text='Правила',
+        text=get_rules_text(),
         reply_markup=ReplyKeyboardMarkup(custom_keyboard)
     )
 
