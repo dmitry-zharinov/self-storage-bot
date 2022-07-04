@@ -6,7 +6,7 @@ from telegram import ParseMode, ReplyKeyboardMarkup, Update
 from telegram.ext import CallbackContext
 
 from .bot_helpers import read_json, get_location
-from .constants import ORDERS_FILENAME, STATUS_ON_DELIVERY
+from .constants import ORDERS_FILENAME, STATUS_UNPAID
 
 env = Env()
 env.read_env()
@@ -109,7 +109,7 @@ def show_current_orders(update: Update, context: CallbackContext):
     for order, info in orders.items():
         status = info.get('status')
 
-        if status is STATUS_ON_DELIVERY:
+        if status is STATUS_UNPAID:
             user_id = info.get('user_id')
             telegram_id = f'<a href="tg://user?id={user_id}">{user_id}</a>'
             client_address = info.get("client_address")

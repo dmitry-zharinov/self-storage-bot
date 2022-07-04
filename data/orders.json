@@ -3,13 +3,16 @@
         "storage_size": "3-комнатная квартира",
         "storage_time": "Полгода",
         "feedback": "+71234567890",
-        "order_id": 1
+        "order_id": 1,
+        "start_time": "2022-06-02"
+
     },
     "#2": {
         "storage_size": "Менее половины комнаты",
         "storage_time": "Год и более",
         "feedback": "+71234567890",
-        "order_id": 2
+        "order_id": 2,
+        "start_time": "2022-06-05"
     },
     "#3": {
         "storage_size": "Менее половины комнаты",
@@ -45,7 +48,7 @@
         "feedback": "+79996732122",
         "order_id": 6,
         "user_id": 511727477,
-        "status": 2,
+        "status": 0,
         "user_name": "Одинцова Мария Владимировна",
         "client_address": "Москва, ул. Костромская, 10",
         "start_time": "2022-07-01"
@@ -56,7 +59,7 @@
         "feedback": "+79672234567",
         "order_id": 7,
         "user_id": 511727477,
-        "status": 2,
+        "status": 0,
         "user_name": "Степанов Руслан Матвеевич",
         "client_address": "Мытищи, Московская область, Лётная улица, 17",
         "start_time": "2022-07-04"
@@ -76,16 +79,16 @@
         "feedback": "+79160975443",
         "order_id": 9,
         "user_id": 511727477,
-        "status": 3,
+        "status": 1,
         "start_time": "2022-07-04"
     },
     "#10": {
         "storage_size": "3-комнатная квартира",
-        "storage_time": "Обсудите с менеджером позже",
+        "storage_time": "Полгода",
         "feedback": "+70987654321",
         "order_id": 10,
         "user_id": 2052602,
-        "status": 2,
+        "status": 1,
         "start_time": "2022-07-04"
     },
     "#11": {
