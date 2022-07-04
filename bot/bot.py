@@ -9,7 +9,8 @@ from .admin_panel import (is_user_admin, open_admin_panel,
                           show_commercial_orders, show_current_orders,
                           show_overdue_orders)
 from .bot_helpers import get_doc, read_json, write_json
-from .constants import ORDERS_FILENAME, STATUS_ON_DELIVERY
+from .constants import (ORDERS_FILENAME, STATUS_ACTIVE, STATUS_ON_DELIVERY,
+                        STATUS_UNPAID, STATUS_COMPLETE)
 
 filling_orders: dict = {}  # ключ - user_id, значение - словарь заказа
 
@@ -40,6 +41,13 @@ def fill_in_field(update: Update, field: str, value):
 def get_processed_order(order_name: str) -> dict:
     processed_orders: dict = read_json(ORDERS_FILENAME)
     return processed_orders[order_name]
+
+
+def get_user_orders(user_id: int) -> dict:
+    orders: dict = read_json(ORDERS_FILENAME)
+    user_orders = {order: info for order, info in orders.items()
+                   if info.get('user_id') == user_id}
+    return user_orders
 
 
 def store_created_orders(orders: list, user_id: int):
@@ -229,39 +237,42 @@ def send_order(update: Update, context: CallbackContext):
     )
 
 
-def get_active_orders() -> list:
-    # TODO: грузить список названий текущих заказов из JSON
-    pass
-
-
-def get_unpaid_orders() -> list:
+def get_orders_by_status(orders: dict, status: int) -> list:
     # TODO: грузить список названий неоплаченных заказов из JSON
-    pass
-
-
-def get_complete_orders() -> list:
-    # TODO: грузить список названий завершённых заказов из JSON
-    pass
+    result_orders = []
+    for order, info in orders.items():
+        if info.get('status') == status:
+            result_orders.append(
+                f'<b>Заказ {order}</b> от {info.get("start_time")}\n'
+                f'Размер хранения: {info.get("storage_size")}\n'
+                f'Сроки хранения: {info.get("storage_time")}\n')
+    return result_orders
 
 
 def show_user_orders(update: Update, context: CallbackContext):
-    unpaid_orders = get_unpaid_orders()
-    active_orders = get_active_orders()
-    complete_orders = get_complete_orders()
+    user_orders = get_user_orders(update.effective_user.id)
+
+    unpaid_orders = get_orders_by_status(user_orders, STATUS_UNPAID)
+    active_orders = get_orders_by_status(user_orders, STATUS_ACTIVE)
+    complete_orders = get_orders_by_status(user_orders, STATUS_COMPLETE)
 
     if not (unpaid_orders or active_orders or complete_orders):
         msg = 'Вы ещё не делали заказов.'
     else:
+        unpaid_orders_len = len(unpaid_orders) if unpaid_orders else 'Нет'
+        active_orders_len = len(active_orders) if active_orders else 'Нет'
+        complete_orders_len = len(complete_orders) if complete_orders else 'Нет'
+
         msg = f"""У вас:
-{f'- {len(unpaid_orders)} неоплаченных заказов;' if unpaid_orders else None}
-{f'- {len(active_orders)} активных заказов;' if active_orders else None}
-{f'- {len(complete_orders)} завершённых заказов;' if complete_orders else None}
+    {f'- {unpaid_orders_len} неоплаченных заказов;'}
+    {f'- {active_orders_len} активных заказов;'}
+    {f'- {complete_orders_len} завершённых заказов;'}
 """
     custom_keyboard = []
     if unpaid_orders:
         custom_keyboard.append(['Неоплаченные заказы'])
     if active_orders:
-        custom_keyboard.append(active_orders)
+        custom_keyboard.append(['Активные заказы'])
     if complete_orders:
         custom_keyboard.append(['Завершённые заказы'])
     custom_keyboard.append(['Главное меню'])
@@ -269,12 +280,41 @@ def show_user_orders(update: Update, context: CallbackContext):
     context.bot.send_message(
         chat_id=update.effective_chat.id,
         text=msg,
+        parse_mode=ParseMode.HTML,
         reply_markup=ReplyKeyboardMarkup(custom_keyboard)
     )
 
 
-def show_unpaid_orders():
-    pass
+def show_unpaid_orders(update: Update, context: CallbackContext):
+    user_orders = get_user_orders(update.effective_user.id)
+    unpaid_orders = get_orders_by_status(user_orders, STATUS_UNPAID)
+
+    custom_keyboard = [
+        ['Мои заказы'], ['Главное меню']
+    ]
+    for order in unpaid_orders:
+        context.bot.send_message(
+            chat_id=update.effective_chat.id,
+            text=f'{order}',
+            parse_mode=ParseMode.HTML,
+            reply_markup=ReplyKeyboardMarkup(custom_keyboard)
+        )
+
+
+def show_active_orders(update: Update, context: CallbackContext):
+    user_orders = get_user_orders(update.effective_user.id)
+    active_orders = get_orders_by_status(user_orders, STATUS_ACTIVE)
+
+    custom_keyboard = [
+        ['Мои заказы'], ['Главное меню']
+    ]
+    for order in active_orders:
+        context.bot.send_message(
+            chat_id=update.effective_chat.id,
+            text=f'{order}',
+            parse_mode=ParseMode.HTML,
+            reply_markup=ReplyKeyboardMarkup(custom_keyboard)
+        )
 
 
 def show_complete_orders():
@@ -358,6 +398,7 @@ def handle_menu_actions(update: Update, context: CallbackContext):
         ###
         'Мои заказы': show_user_orders,
         'Неоплаченные заказы': show_unpaid_orders,
+        'Активные заказы': show_active_orders,
         'Завершённые заказы': show_complete_orders,
         ###
         'Правила хранения': show_rules,
