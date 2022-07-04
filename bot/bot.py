@@ -24,13 +24,13 @@ created_orders = []  # значение - словарь заказа
 #     'user_name': '',
 #     'status': '',
 #     'name': '',
+#     'phone_number': '',
+#     'client_address': '',
 #     'stotage_size': '',
 #     'storage_time': '',
 #     'start_time': '',
 #     'end_time': '',
-#     'feedback': '',
 #     'need_delivery': '',
-#     'client_address': '',
 # }
 
 
@@ -130,7 +130,9 @@ def choose_storage_size(update: Update, context: CallbackContext):
     ]
     context.bot.send_message(
         chat_id=update.effective_chat.id,
-        text='Пожалуйста, выберите примерный объём вещей',
+        text='Пожалуйста, выберите примерный объём вещей. '
+             'Вам не нужно замерять их, все необходимые замеры '
+             'будут сделаны либо мувером, либо при приёме на склад.',
         reply_markup=ReplyKeyboardMarkup(custom_keyboard)
     )
 
@@ -156,7 +158,8 @@ def choose_storage_time(update: Update, context: CallbackContext):
     )
 
 
-def ask_for_feedback(update: Update, context: CallbackContext):
+def ask_for_personal_data(update: Update, context: CallbackContext):
+    # TODO: запросить ФИО закзачика, номер телефона и адрес забора вещей
     msg = ''
     storage_time = update.message.text
     if storage_time == 'Выбрать время позже':
@@ -337,7 +340,9 @@ def show_qr_code(update: Update, context: CallbackContext):
             chat_id=update.effective_chat.id,
             document=get_doc(qr_filename),
             filename=qr_filename,
-            caption='QR-код для доступа на склад',
+            caption='QR-код для доступа на склад. '
+                    'При необходимости Вы сможете вернуть вещи '
+                    '(или часть вещей) в бокс до истечения срока аренды.',
             reply_markup=ReplyKeyboardMarkup(custom_keyboard))
     else:
         context.bot.send_message(
@@ -423,11 +428,11 @@ def handle_menu_actions(update: Update, context: CallbackContext):
         '3-комнатная квартира': choose_storage_time,
         'Выбрать размер позже': choose_storage_time,
         ###
-        '1 месяц': ask_for_feedback,
-        '3 месяца': ask_for_feedback,
-        'Полгода': ask_for_feedback,
-        'Год и более': ask_for_feedback,
-        'Выбрать время позже': ask_for_feedback,
+        '1 месяц': ask_for_personal_data,
+        '3 месяца': ask_for_personal_data,
+        'Полгода': ask_for_personal_data,
+        'Год и более': ask_for_personal_data,
+        'Выбрать время позже': ask_for_personal_data,
         ###
         'Обработка персональных данных': show_personal_data_terms,
         'Подать заявку': send_order,
