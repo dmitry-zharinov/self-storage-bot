@@ -113,19 +113,19 @@ def show_current_orders(update: Update, context: CallbackContext):
             telegram_id = f'<a href="tg://user?id={user_id}">{user_id}</a>'
             client_address = info.get("client_address")
 
-            order_text = f'<b>Заказ {order}</b>\n' \
-                         f'Клиент {info.get("user_name")}\n' \
-                         f'Telegram ID: {telegram_id}\n' \
-                         f'Номер телефона: {info.get("feedback")}\n' \
-                         f'Адрес: {client_address}\n'
-            msg = context.bot.send_message(
-                chat_id=update.effective_chat.id,
-                text=order_text,
-                parse_mode=ParseMode.HTML,
-                reply_markup=get_admin_keyboard())
+            if client_address:
+                order_text = f'<b>Заказ {order}</b>\n' \
+                    f'Клиент {info.get("user_name")}\n' \
+                    f'Telegram ID: {telegram_id}\n' \
+                    f'Номер телефона: {info.get("feedback")}\n' \
+                    f'Адрес: {client_address}\n'
+                msg = context.bot.send_message(
+                    chat_id=update.effective_chat.id,
+                    text=order_text,
+                    parse_mode=ParseMode.HTML,
+                    reply_markup=get_admin_keyboard())
 
-            location = get_location(client_address)
-            if location:
+                location = get_location(client_address)
                 context.bot.sendLocation(
                     chat_id=update.effective_chat.id,
                     latitude=location.latitude,
