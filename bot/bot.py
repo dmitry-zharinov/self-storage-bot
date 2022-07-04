@@ -336,11 +336,11 @@ def show_qr_code(update: Update, context: CallbackContext):
         storage_data = str(update.effective_chat.id)
         qr_filename = generate_qrcode(storage_data)
 
-        context.bot.send_document(
+        context.bot.send_photo(
             chat_id=update.effective_chat.id,
-            document=get_doc(qr_filename),
+            photo=get_doc(qr_filename),
             filename=qr_filename,
-            caption='QR-код для доступа на склад. '
+            caption='QR-код для доступа на склад.\n'
                     'При необходимости Вы сможете вернуть вещи '
                     '(или часть вещей) в бокс до истечения срока аренды.',
             reply_markup=ReplyKeyboardMarkup(custom_keyboard))
