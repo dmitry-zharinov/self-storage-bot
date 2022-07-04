@@ -50,6 +50,6 @@ def write_json(data, filename: str):
 def get_doc(filename: str):
     """Считать и вернуть бинарный файл"""
     with open(Path.cwd() / Path(DATA_FOLDER) / filename,
-              'rb', encoding='utf8') as file_:
+              'rb') as file_:
         doc = file_.read()
     return doc
