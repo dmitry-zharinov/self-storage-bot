@@ -8,9 +8,9 @@ from telegram.ext import (CallbackContext, CommandHandler, Dispatcher, Filters,
 from .admin_panel import (is_user_admin, open_admin_panel,
                           show_commercial_orders, show_current_orders,
                           show_overdue_orders)
-from .bot_helpers import get_doc, read_json, write_json
-from .constants import (ORDERS_FILENAME, STATUS_ACTIVE, STATUS_ON_DELIVERY,
-                        STATUS_UNPAID, STATUS_COMPLETE)
+from .bot_helpers import generate_qrcode, get_doc, read_json, write_json
+from .constants import (ORDERS_FILENAME, STATUS_ACTIVE, STATUS_COMPLETE,
+                        STATUS_ON_DELIVERY, STATUS_UNPAID)
 
 filling_orders: dict = {}  # ключ - user_id, значение - словарь заказа
 
@@ -254,26 +254,26 @@ def show_user_orders(update: Update, context: CallbackContext):
 
     unpaid_orders = get_orders_by_status(user_orders, STATUS_UNPAID)
     active_orders = get_orders_by_status(user_orders, STATUS_ACTIVE)
-    complete_orders = get_orders_by_status(user_orders, STATUS_COMPLETE)
+    complete_order = get_orders_by_status(user_orders, STATUS_COMPLETE)
 
-    if not (unpaid_orders or active_orders or complete_orders):
+    if not (unpaid_orders or active_orders or complete_order):
         msg = 'Вы ещё не делали заказов.'
     else:
         unpaid_orders_len = len(unpaid_orders) if unpaid_orders else 'Нет'
         active_orders_len = len(active_orders) if active_orders else 'Нет'
-        complete_orders_len = len(complete_orders) if complete_orders else 'Нет'
+        complete_order_len = len(complete_order) if complete_order else 'Нет'
 
         msg = f"""У вас:
     {f'- {unpaid_orders_len} неоплаченных заказов;'}
     {f'- {active_orders_len} активных заказов;'}
-    {f'- {complete_orders_len} завершённых заказов;'}
+    {f'- {complete_order_len} завершённых заказов;'}
 """
     custom_keyboard = []
     if unpaid_orders:
         custom_keyboard.append(['Неоплаченные заказы'])
     if active_orders:
         custom_keyboard.append(['Активные заказы'])
-    if complete_orders:
+    if complete_order:
         custom_keyboard.append(['Завершённые заказы'])
     custom_keyboard.append(['Главное меню'])
 
@@ -306,7 +306,7 @@ def show_active_orders(update: Update, context: CallbackContext):
     active_orders = get_orders_by_status(user_orders, STATUS_ACTIVE)
 
     custom_keyboard = [
-        ['Мои заказы'], ['Главное меню']
+        ['Мой QR-код'], ['Мои заказы'], ['Главное меню']
     ]
     for order in active_orders:
         context.bot.send_message(
@@ -315,6 +315,31 @@ def show_active_orders(update: Update, context: CallbackContext):
             parse_mode=ParseMode.HTML,
             reply_markup=ReplyKeyboardMarkup(custom_keyboard)
         )
+
+
+def show_qr_code(update: Update, context: CallbackContext):
+    custom_keyboard = [
+        ['Мои заказы'], ['Главное меню']
+    ]
+    user_id = update.effective_user.id
+    user_orders = get_user_orders(user_id)
+    active_orders = get_orders_by_status(user_orders, STATUS_ACTIVE)
+
+    if active_orders:
+        storage_data = str(update.effective_chat.id)
+        qr_filename = generate_qrcode(storage_data)
+
+        context.bot.send_document(
+            chat_id=update.effective_chat.id,
+            document=get_doc(qr_filename),
+            filename=qr_filename,
+            caption='QR-код для доступа на склад',
+            reply_markup=ReplyKeyboardMarkup(custom_keyboard))
+    else:
+        context.bot.send_message(
+            chat_id=user_id,
+            text='У вас нет активных заказов!',
+            reply_markup=get_main_menu(user_id))
 
 
 def show_complete_orders():
@@ -400,6 +425,7 @@ def handle_menu_actions(update: Update, context: CallbackContext):
         'Неоплаченные заказы': show_unpaid_orders,
         'Активные заказы': show_active_orders,
         'Завершённые заказы': show_complete_orders,
+        'Мой QR-код': show_qr_code,
         ###
         'Правила хранения': show_rules,
         'Частые вопросы (FAQ)': show_faq,

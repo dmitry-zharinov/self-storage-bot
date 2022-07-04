@@ -1,3 +1,5 @@
 environs==9.5.0
 python-telegram-bot==13.13
 geopy==2.2.0
+qrcode==7.3.1
+Pillow==9.2.0
