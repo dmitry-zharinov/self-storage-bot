@@ -87,5 +87,14 @@
         "user_id": 2052602,
         "status": 2,
         "start_time": "2022-07-04"
+    },
+    "#11": {
+        "storage_size": "Менее половины комнаты",
+        "storage_time": "Полгода",
+        "feedback": "+71234567888",
+        "order_id": 11,
+        "user_id": 2052602,
+        "status": 1,
+        "start_time": "2022-07-04"
     }
 }

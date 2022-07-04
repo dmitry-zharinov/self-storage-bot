@@ -258,14 +258,14 @@ def show_user_orders(update: Update, context: CallbackContext):
 
     unpaid_orders = get_orders_by_status(user_orders, STATUS_UNPAID)
     active_orders = get_orders_by_status(user_orders, STATUS_ACTIVE)
-    complete_order = get_orders_by_status(user_orders, STATUS_COMPLETE)
+    complete_orders = get_orders_by_status(user_orders, STATUS_COMPLETE)
 
-    if not (unpaid_orders or active_orders or complete_order):
+    if not (unpaid_orders or active_orders or complete_orders):
         msg = 'Вы ещё не делали заказов.'
     else:
         unpaid_orders_len = len(unpaid_orders) if unpaid_orders else 'Нет'
         active_orders_len = len(active_orders) if active_orders else 'Нет'
-        complete_order_len = len(complete_order) if complete_order else 'Нет'
+        complete_order_len = len(complete_orders) if complete_orders else 'Нет'
 
         msg = f"""У вас:
     {f'- {unpaid_orders_len} неоплаченных заказов;'}
@@ -277,7 +277,7 @@ def show_user_orders(update: Update, context: CallbackContext):
         custom_keyboard.append(['Неоплаченные заказы'])
     if active_orders:
         custom_keyboard.append(['Активные заказы'])
-    if complete_order:
+    if complete_orders:
         custom_keyboard.append(['Завершённые заказы'])
     custom_keyboard.append(['Главное меню'])
 
@@ -346,8 +346,20 @@ def show_qr_code(update: Update, context: CallbackContext):
             reply_markup=get_main_menu(user_id))
 
 
-def show_complete_orders():
-    pass
+def show_complete_orders(update: Update, context: CallbackContext):
+    user_orders = get_user_orders(update.effective_user.id)
+    complete_orders = get_orders_by_status(user_orders, STATUS_COMPLETE)
+
+    custom_keyboard = [
+        ['Мои заказы'], ['Главное меню']
+    ]
+    for order in complete_orders:
+        context.bot.send_message(
+            chat_id=update.effective_chat.id,
+            text=f'{order}',
+            parse_mode=ParseMode.HTML,
+            reply_markup=ReplyKeyboardMarkup(custom_keyboard)
+        )
 
 
 def get_rules_text() -> str:
@@ -398,11 +410,6 @@ def show_faq(update: Update, context: CallbackContext):
         )
 
 
-def show_order_status(order_name: str,
-                      update: Update, context: CallbackContext):
-    showing_order = get_processed_order(order_name)
-
-
 def handle_menu_actions(update: Update, context: CallbackContext):
     menu_actions = {
         'Главное меню': return_to_main_menu,
@@ -440,9 +447,7 @@ def handle_menu_actions(update: Update, context: CallbackContext):
         'Эффективность рекламы': show_commercial_orders,
     }
     action_text = update.message.text
-    if action_text.startswith('#'):
-        show_order_status(action_text, update, context)
-    elif action_text.startswith('+'):
+    if action_text.startswith('+'):
         confirm_order(action_text, update, context)
     elif action_text in menu_actions:
         action = menu_actions[action_text]

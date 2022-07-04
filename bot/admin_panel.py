@@ -27,6 +27,7 @@ def get_main_menu(user_id: int) -> ReplyKeyboardMarkup:
 
 def restricted(func):
     """Запрет доступа к обработчику для не-администраторов"""
+
     @wraps(func)
     def wrapped(update, context, *args, **kwargs):
         user_id = update.effective_user.id
@@ -113,10 +114,10 @@ def show_current_orders(update: Update, context: CallbackContext):
             client_address = info.get("client_address")
 
             order_text = f'<b>Заказ {order}</b>\n' \
-                f'Клиент {info.get("user_name")}\n' \
-                f'Telegram ID: {telegram_id}\n' \
-                f'Номер телефона: {info.get("feedback")}\n' \
-                f'Адрес: {client_address}\n'
+                         f'Клиент {info.get("user_name")}\n' \
+                         f'Telegram ID: {telegram_id}\n' \
+                         f'Номер телефона: {info.get("feedback")}\n' \
+                         f'Адрес: {client_address}\n'
             msg = context.bot.send_message(
                 chat_id=update.effective_chat.id,
                 text=order_text,
