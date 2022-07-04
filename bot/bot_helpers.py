@@ -1,7 +1,9 @@
 import json
 from pathlib import Path
 
-DATA_FOLDER = 'data'
+from geopy.geocoders import Nominatim
+
+from .constants import DATA_FOLDER
 
 
 def read_json(filename: str):
@@ -25,3 +27,9 @@ def get_doc(filename: str):
               'rb') as file_:
         doc = file_.read()
     return doc
+
+
+def get_location(address: str):
+    """Найти адрес по текстовому описанию"""
+    geolocator = Nominatim(user_agent="Tester")
+    return geolocator.geocode(address)
