@@ -9,12 +9,12 @@ from .admin_panel import (is_user_admin, open_admin_panel,
                           show_commercial_orders, show_current_orders,
                           show_overdue_orders)
 from .bot_helpers import get_doc, read_json, write_json
+from .constants import ORDERS_FILENAME, STATUS_ON_DELIVERY
 
 filling_orders: dict = {}  # ключ - user_id, значение - словарь заказа
 
 created_orders = []  # значение - словарь заказа
 
-ORDERS_FILENAME = 'orders.json'
 
 # Как выглядит словарь каждого заказа:
 # {
@@ -51,6 +51,7 @@ def store_created_orders(orders: list, user_id: int):
     for order in orders:
         order['order_id'] = current_order_id
         order['user_id'] = user_id
+        order['status'] = STATUS_ON_DELIVERY
         order['start_time'] = str(datetime.today().date())
         processed_orders[f'#{current_order_id}'] = order
         current_order_id += 1
