@@ -1,13 +1,14 @@
 import logging
+from datetime import datetime
 
-from telegram import ReplyKeyboardMarkup, Update, ParseMode
-from telegram.ext import (CallbackContext, CommandHandler, Dispatcher,
-                          Filters, MessageHandler, Updater)
+from telegram import ParseMode, ReplyKeyboardMarkup, Update
+from telegram.ext import (CallbackContext, CommandHandler, Dispatcher, Filters,
+                          MessageHandler, Updater)
 
-from .bot_helpers import (read_json, write_json, get_doc)
-from .admin_panel import (open_admin_panel, is_user_admin,
-                          show_current_orders, show_overdue_orders,
-                          show_commercial_orders)
+from .admin_panel import (is_user_admin, open_admin_panel,
+                          show_commercial_orders, show_current_orders,
+                          show_overdue_orders)
+from .bot_helpers import get_doc, read_json, write_json
 
 filling_orders: dict = {}  # ключ - user_id, значение - словарь заказа
 
@@ -41,7 +42,7 @@ def get_processed_order(order_name: str) -> dict:
     return processed_orders[order_name]
 
 
-def store_created_orders(orders: list):
+def store_created_orders(orders: list, user_id: int):
     current_order_id = 1
     processed_orders: dict = read_json(ORDERS_FILENAME)
     if processed_orders:
@@ -49,6 +50,8 @@ def store_created_orders(orders: list):
                                    processed_orders.keys())) + 1
     for order in orders:
         order['order_id'] = current_order_id
+        order['user_id'] = user_id
+        order['start_time'] = str(datetime.today().date())
         processed_orders[f'#{current_order_id}'] = order
         current_order_id += 1
     write_json(processed_orders, ORDERS_FILENAME)
@@ -215,7 +218,7 @@ def send_order(update: Update, context: CallbackContext):
     created_orders.append(filling_orders[user_id])
     del filling_orders[user_id]
     if not filling_orders:
-        store_created_orders(created_orders)
+        store_created_orders(created_orders, user_id)
         created_orders.clear()
     msg = 'Благодарим Вас за оставленную заявку!'
     context.bot.send_message(
