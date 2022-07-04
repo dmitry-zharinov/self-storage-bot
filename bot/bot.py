@@ -167,10 +167,11 @@ def ask_for_feedback(update: Update, context: CallbackContext):
 
 
 def show_personal_data_terms(update: Update, context: CallbackContext):
-    # TODO: найти PDF с Положением по обработке персональных данных
+    filename = 'personal_data_terms.pdf'
     context.bot.send_document(
         chat_id=update.effective_chat.id,
-        document=get_doc('personal_data_terms.pdf'),
+        document=get_doc(filename),
+        filename=filename,
         caption='Положение по обработке персональных данных'
     )
     custom_keyboard = [
@@ -324,8 +325,8 @@ def show_faq(update: Update, context: CallbackContext):
 
 @restricted
 def open_admin_panel(update: Update, context: CallbackContext):
-    # current_orders = admin_current_orders()
-    # overdue_orders = admin_overdue_orders()
+    # current_orders = show_current_orders()
+    overdue_orders = show_overdue_orders(update, context)
     # commercial_orders = get_commercial_orders()
 
     custom_keyboard = [
@@ -336,6 +337,19 @@ def open_admin_panel(update: Update, context: CallbackContext):
     context.bot.send_message(
         chat_id=update.effective_chat.id,
         text='Панель администратора',
+        reply_markup=ReplyKeyboardMarkup(custom_keyboard)
+    )
+
+
+def show_overdue_orders(update: Update, context: CallbackContext):
+    msg = 'Вот это просроченные заказы:'
+
+    custom_keyboard = []
+    custom_keyboard.append(['Главное меню'])
+
+    context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text=msg,
         reply_markup=ReplyKeyboardMarkup(custom_keyboard)
     )
 
@@ -375,6 +389,7 @@ def handle_menu_actions(update: Update, context: CallbackContext):
         'Частые вопросы (FAQ)': show_faq,
         ###
         'Панель администратора': open_admin_panel,
+        'Просроченные заказы': show_overdue_orders,
     }
     action_text = update.message.text
     if action_text.startswith('#'):
