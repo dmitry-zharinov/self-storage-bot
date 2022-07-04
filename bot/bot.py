@@ -4,13 +4,16 @@ from telegram import ReplyKeyboardMarkup, Update, ParseMode
 from telegram.ext import (CallbackContext, CommandHandler, Dispatcher,
                           Filters, MessageHandler, Updater)
 
-from .bot_helpers import (is_user_admin, restricted, read_json, write_json,
-                          get_doc)
+from .bot_helpers import (read_json, write_json, get_doc)
+from .admin_panel import (open_admin_panel, is_user_admin,
+                          show_current_orders, show_overdue_orders,
+                          show_commercial_orders)
 
 filling_orders: dict = {}  # ключ - user_id, значение - словарь заказа
 
 created_orders = []  # значение - словарь заказа
 
+ORDERS_FILENAME = 'orders.json'
 
 # Как выглядит словарь каждого заказа:
 # {
@@ -34,13 +37,13 @@ def fill_in_field(update: Update, field: str, value):
 
 
 def get_processed_order(order_name: str) -> dict:
-    processed_orders: dict = read_json('orders.json')
+    processed_orders: dict = read_json(ORDERS_FILENAME)
     return processed_orders[order_name]
 
 
 def store_created_orders(orders: list):
     current_order_id = 1
-    processed_orders: dict = read_json('orders.json')
+    processed_orders: dict = read_json(ORDERS_FILENAME)
     if processed_orders:
         current_order_id = max(map(lambda x: int(x.strip('#')),
                                    processed_orders.keys())) + 1
@@ -48,7 +51,7 @@ def store_created_orders(orders: list):
         order['order_id'] = current_order_id
         processed_orders[f'#{current_order_id}'] = order
         current_order_id += 1
-    write_json(processed_orders, 'orders.json')
+    write_json(processed_orders, ORDERS_FILENAME)
 
 
 def get_main_menu(user_id: int) -> ReplyKeyboardMarkup:
@@ -58,7 +61,6 @@ def get_main_menu(user_id: int) -> ReplyKeyboardMarkup:
     ]
     if is_user_admin(user_id):
         custom_keyboard.append(['Панель администратора'])
-
     return ReplyKeyboardMarkup(custom_keyboard)
 
 
@@ -323,37 +325,6 @@ def show_faq(update: Update, context: CallbackContext):
         )
 
 
-@restricted
-def open_admin_panel(update: Update, context: CallbackContext):
-    # current_orders = show_current_orders()
-    overdue_orders = show_overdue_orders(update, context)
-    # commercial_orders = get_commercial_orders()
-
-    custom_keyboard = [
-        ['Текущие заказы'], ['Просроченные заказы'],
-        ['Эффективность рекламы'], ['Главное меню']
-    ]
-
-    context.bot.send_message(
-        chat_id=update.effective_chat.id,
-        text='Панель администратора',
-        reply_markup=ReplyKeyboardMarkup(custom_keyboard)
-    )
-
-
-def show_overdue_orders(update: Update, context: CallbackContext):
-    msg = 'Вот это просроченные заказы:'
-
-    custom_keyboard = []
-    custom_keyboard.append(['Главное меню'])
-
-    context.bot.send_message(
-        chat_id=update.effective_chat.id,
-        text=msg,
-        reply_markup=ReplyKeyboardMarkup(custom_keyboard)
-    )
-
-
 def show_order_status(order_name: str,
                       update: Update, context: CallbackContext):
     showing_order = get_processed_order(order_name)
@@ -390,6 +361,8 @@ def handle_menu_actions(update: Update, context: CallbackContext):
         ###
         'Панель администратора': open_admin_panel,
         'Просроченные заказы': show_overdue_orders,
+        'Текущие заказы': show_current_orders,
+        'Эффективность рекламы': show_commercial_orders,
     }
     action_text = update.message.text
     if action_text.startswith('#'):

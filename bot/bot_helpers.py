@@ -1,39 +1,11 @@
 import json
-from functools import wraps
 from pathlib import Path
 
-from environs import Env
-
-env = Env()
-env.read_env()
-
-LIST_OF_ADMINS = list(map(int, env.list('LIST_OF_ADMINS'))) 
 DATA_FOLDER = 'data'
 
 
-def restricted(func):
-    """Запрет доступа к обработчику для не-администраторов"""
-
-    @wraps(func)
-    def wrapped(update, context, *args, **kwargs):
-        user_id = update.effective_user.id
-        if not is_user_admin(user_id):
-            print(f'Нет прав доступа для user_id {user_id}.')
-            return
-        return func(update, context, *args, **kwargs)
-
-    return wrapped
-
-
-def is_user_admin(user_id: int) -> bool:
-    """Проверка: пользователь является администратором?"""
-    if user_id in LIST_OF_ADMINS:
-        return True
-    return False
-
-
 def read_json(filename: str):
-    """Десереализовать JSON"""
+    """Десериализовать JSON"""
     with open(Path.cwd() / Path(DATA_FOLDER) / filename,
               'r', encoding='utf8') as file_:
         file_json = file_.read()
@@ -41,7 +13,7 @@ def read_json(filename: str):
 
 
 def write_json(data, filename: str):
-    """Сереализовать JSON"""
+    """Сериализовать JSON"""
     with open(Path.cwd() / Path(DATA_FOLDER) / filename,
               'w', encoding='utf8') as file_:
         file_.write(json.dumps(data, indent=4, ensure_ascii=False))
