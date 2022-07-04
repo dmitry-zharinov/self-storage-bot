@@ -1,12 +1,15 @@
+from collections import Counter
 from datetime import datetime
 from functools import wraps
+from pathlib import Path
 
+import pandas
 from environs import Env
 from telegram import ParseMode, ReplyKeyboardMarkup, Update
 from telegram.ext import CallbackContext
 
-from .bot_helpers import read_json, get_location
-from .constants import ORDERS_FILENAME, STATUS_UNPAID
+from .bot_helpers import get_doc, get_location, read_json
+from .constants import DATA_FOLDER, ORDERS_FILENAME, STATUS_UNPAID
 
 env = Env()
 env.read_env()
@@ -94,11 +97,40 @@ def show_overdue_orders(update: Update, context: CallbackContext):
 
 @restricted
 def show_commercial_orders(update: Update, context: CallbackContext):
-    # TODO: показать количество заказов и количество пользователей
+    orders: dict = read_json(ORDERS_FILENAME)
+    order_dates = list()
+    for order, info in orders.items():
+        start_date = info.get('start_time')
+        if start_date:
+            order_dates.append(start_date)
+    plot_filename = create_orders_diagram(order_dates)
+
     context.bot.send_message(
         chat_id=update.effective_chat.id,
-        text='Людей сделало заказов с рекламы:',
+        text=f'Всего заказов через бота: {len(order_dates)}',
+    )
+    context.bot.send_photo(
+        chat_id=update.effective_chat.id,
+        photo=get_doc(plot_filename),
         reply_markup=get_admin_keyboard())
+
+
+def create_orders_diagram(order_dates: list):
+    '''Создать диаграмму с распредлением заказов по месяцам'''
+    plot_filename = 'plot.png'
+    orders_counter = Counter(order_dates)
+    orders_df = pandas.DataFrame(
+        {'date': orders_counter.keys(),
+         'counts': orders_counter.values()})
+    orders_df['date'] = pandas.to_datetime(orders_df['date'])
+    result_df = orders_df.groupby(orders_df['date'].dt.to_period('M')).sum()
+    result_df = result_df.resample('M').asfreq().fillna(0)
+    result_plot = result_df.plot(kind='bar')
+    figure = result_plot.get_figure()
+    figure.savefig(
+        Path.cwd() / Path(DATA_FOLDER) / plot_filename,
+        bbox_inches='tight')
+    return plot_filename
 
 
 @restricted
@@ -141,6 +173,7 @@ def show_current_orders(update: Update, context: CallbackContext):
 
 
 def get_admin_keyboard():
+    """Меню для панели администратора"""
     custom_keyboard = [
         ['Текущие заказы'], ['Просроченные заказы'],
         ['Эффективность рекламы'], ['Главное меню']
