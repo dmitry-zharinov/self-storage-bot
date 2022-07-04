@@ -10,7 +10,7 @@ from .admin_panel import (is_user_admin, open_admin_panel,
                           show_overdue_orders)
 from .bot_helpers import generate_qrcode, get_doc, read_json, write_json
 from .constants import (ORDERS_FILENAME, STATUS_ACTIVE, STATUS_COMPLETE,
-                        STATUS_ON_DELIVERY, STATUS_UNPAID)
+                        STATUS_UNPAID)
 
 filling_orders: dict = {}  # ключ - user_id, значение - словарь заказа
 
@@ -59,7 +59,7 @@ def store_created_orders(orders: list, user_id: int):
     for order in orders:
         order['order_id'] = current_order_id
         order['user_id'] = user_id
-        order['status'] = STATUS_ON_DELIVERY
+        order['status'] = STATUS_UNPAID
         order['start_time'] = str(datetime.today().date())
         processed_orders[f'#{current_order_id}'] = order
         current_order_id += 1
@@ -98,22 +98,27 @@ def return_to_main_menu(update: Update, context: CallbackContext):
     )
 
 
-def get_rental_terms_text() -> str:
-    # TODO: грузить текст условий заказа аренды из JSON
-    pass
+def get_rental_terms_text() -> list:
+    terms = read_json('rental_terms.json')
+    terms_text = []
+    for section, text in terms.items():
+        text_ = '\n\n'.join(text)
+        terms_text.append(f'<b>{section}</b>\n\n{text_}')
+    return terms_text
 
 
 def order_rental(update: Update, context: CallbackContext):
     custom_keyboard = [
         ['Сделать заказ'], ['Главное меню']
     ]
-    context.bot.send_message(
-        chat_id=update.effective_chat.id,
-        # text=get_rental_terms_text(),
-        text="""Закажите аренду на нашем складе по адресу: ...
-Доставка до склада бесплатна.""",
-        reply_markup=ReplyKeyboardMarkup(custom_keyboard)
-    )
+    terms_text = get_rental_terms_text()
+    for section in terms_text:
+        context.bot.send_message(
+            chat_id=update.effective_chat.id,
+            text=section,
+            parse_mode=ParseMode.HTML,
+            reply_markup=ReplyKeyboardMarkup(custom_keyboard)
+        )
 
 
 def choose_storage_size(update: Update, context: CallbackContext):
@@ -238,7 +243,6 @@ def send_order(update: Update, context: CallbackContext):
 
 
 def get_orders_by_status(orders: dict, status: int) -> list:
-    # TODO: грузить список названий неоплаченных заказов из JSON
     result_orders = []
     for order, info in orders.items():
         if info.get('status') == status:
