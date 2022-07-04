@@ -94,6 +94,7 @@ def show_overdue_orders(update: Update, context: CallbackContext):
 
 @restricted
 def show_commercial_orders(update: Update, context: CallbackContext):
+    # TODO: показать количество заказов и количество пользователей
     context.bot.send_message(
         chat_id=update.effective_chat.id,
         text='Людей сделало заказов с рекламы:',
@@ -136,7 +137,6 @@ def show_current_orders(update: Update, context: CallbackContext):
         context.bot.send_message(
             chat_id=update.effective_chat.id,
             text='Нет активных заказов на доставку',
-            parse_mode=ParseMode.HTML,
             reply_markup=get_admin_keyboard())
 
 
