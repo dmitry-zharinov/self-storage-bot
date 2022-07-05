@@ -10,7 +10,7 @@ from .constants import ORDERS_FILENAME, STATUS_ACTIVE
 
 
 def order_expired(context: CallbackContext):
-    '''Cрок аренды истёк'''
+    """Срок аренды истёк"""
     overdue_orders = get_overdue_orders()
     for order, info in overdue_orders.items():
         user_id = info.get('user_id')
@@ -29,7 +29,7 @@ def order_expired(context: CallbackContext):
 
 
 def order_expires_soon(context: CallbackContext):
-    '''Подходит конец срока аренды'''
+    """Подходит конец срока аренды"""
     notification_time = [30, 14, 7, 3]
     orders: dict = read_json(ORDERS_FILENAME)
     for order, info in orders.items():

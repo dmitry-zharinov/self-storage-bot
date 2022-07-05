@@ -93,7 +93,6 @@ def show_overdue_orders(update: Update, context: CallbackContext):
         context.bot.send_message(
             chat_id=update.effective_chat.id,
             text='Нет просроченных заказов',
-            parse_mode=ParseMode.HTML,
             reply_markup=get_admin_keyboard())
     else:
         for order in overdue_orders_text:
