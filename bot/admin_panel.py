@@ -125,12 +125,15 @@ def show_commercial_orders(update: Update, context: CallbackContext):
 
 
 def create_orders_diagram(order_dates: list):
-    '''Создать диаграмму с распредлением заказов по месяцам'''
+    """Создать диаграмму с распредлением заказов по месяцам"""
     plot_filename = 'plot.png'
     orders_counter = Counter(order_dates)
     orders_df = pandas.DataFrame(
-        {'date': orders_counter.keys(),
-         'counts': orders_counter.values()})
+        {
+            'date': orders_counter.keys(),
+            'counts': orders_counter.values()
+        }
+    )
     orders_df['date'] = pandas.to_datetime(orders_df['date'])
     result_df = orders_df.groupby(orders_df['date'].dt.to_period('M')).sum()
     result_df = result_df.resample('M').asfreq().fillna(0)
@@ -157,10 +160,10 @@ def show_current_orders(update: Update, context: CallbackContext):
 
             if client_address:
                 order_text = f'<b>Заказ {order}</b>\n' \
-                    f'Клиент {info.get("user_name")}\n' \
-                    f'Telegram ID: {telegram_id}\n' \
-                    f'Номер телефона: {info.get("feedback")}\n' \
-                    f'Адрес: {client_address}\n'
+                             f'Клиент {info.get("user_name")}\n' \
+                             f'Telegram ID: {telegram_id}\n' \
+                             f'Номер телефона: {info.get("feedback")}\n' \
+                             f'Адрес: {client_address}\n'
                 msg = context.bot.send_message(
                     chat_id=update.effective_chat.id,
                     text=order_text,

@@ -160,7 +160,6 @@ def choose_storage_time(update: Update, context: CallbackContext):
 
 
 def ask_for_personal_data(update: Update, context: CallbackContext):
-    # TODO: запросить ФИО закзачика, номер телефона и адрес забора вещей
     msg = ''
     storage_time = update.message.text
     if storage_time == 'Выбрать время позже':
@@ -173,8 +172,10 @@ def ask_for_personal_data(update: Update, context: CallbackContext):
         ['Обработка персональных данных'],
         ['Главное меню']
     ]
-    msg = f"""{msg}Пожалуйста, введите номер телефона для связи \
-\\(обязательно в формате `+71234567890` \\)\\.
+    msg = f"""{msg}Пожалуйста, введите номер телефона для связи, а также \
+Ваши ФИО и адрес, с которого нужно забрать вещи на хранение \
+\\(обязательно в формате `+71234567890, ФИО: ..., адрес: ...` \\- \
+чтобы наш бот распознал их; нажмите на эту строку, чтобы скопировать её\\)\\.
 Сообщая его нам, Вы соглашаетесь с нашим Положением по обработке Ваших \
 персональных данных\\.
 Вы можете ознакомиться с ним, нажав кнопку в меню \
@@ -202,21 +203,33 @@ def show_personal_data_terms(update: Update, context: CallbackContext):
     ]
     context.bot.send_message(
         chat_id=update.effective_chat.id,
-        text="""Пожалуйста, введите номер телефона для связи \
-\\(обязательно в формате `+71234567890` \\)\\.""",
+        text="""Пожалуйста, введите номер телефона для связи, а также \
+Ваши ФИО и адрес, с которого нужно забрать вещи на хранение \
+\\(обязательно в формате `+71234567890, ФИО: ..., адрес: ...` \\- чтобы \
+наш бот распознал их; нажмите на эту строку, чтобы скопировать её\\)\\.""",
         parse_mode=ParseMode.MARKDOWN_V2,
         reply_markup=ReplyKeyboardMarkup(custom_keyboard)
     )
 
 
 def confirm_order(feedback: str, update: Update, context: CallbackContext):
-    fill_in_field(update, 'feedback', feedback)
+    phone_number, name, *client_address = feedback.split(',')
+    phone_number: str = phone_number.strip()
+    name: str = name.strip().removeprefix('ФИО:').strip()
+    client_address: str = ', '.join(client_address).strip()
+    client_address = client_address.removeprefix('адрес:').strip()
+    fill_in_field(update, 'phone_number', phone_number)
+    fill_in_field(update, 'client_address', client_address)
+    fill_in_field(update, 'user_name', name)
     current_order = filling_orders[update.effective_user.id]
     msg = f"""Пожалуйста, проверьте вашу заявку перед подачей:
 
 Объём вещей: {current_order['storage_size']}
 Время хранения: {current_order['storage_time']}
-Телефон для связи: {current_order['feedback']}
+Ваши ФИО: {current_order['user_name']}
+Телефон для связи: {current_order['phone_number']}
+Адрес, с которого нужно забрать вещи на хранение: \
+{current_order['client_address']}
 
 Если всё верно, нажмите кнопку "Подать заявку".
 Менеджер свяжется с Вами по указанному номеру с 9:00 до 21:00.
@@ -250,10 +263,14 @@ def get_orders_by_status(orders: dict, status: int) -> list:
     result_orders = []
     for order, info in orders.items():
         if info.get('status') == status:
+            name = info.get("name")
             result_orders.append(
                 f'<b>Заказ {order}</b> от {info.get("start_time")}\n'
+                f'Что хранится: {name if name else ""}\n'
                 f'Размер хранения: {info.get("storage_size")}\n'
-                f'Сроки хранения: {info.get("storage_time")}\n')
+                f'Сроки хранения: {info.get("storage_time")}\n'
+                f'Адрес: {info.get("client_address")}\n'
+            )
     return result_orders
 
 
