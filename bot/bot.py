@@ -5,7 +5,7 @@ from telegram import ParseMode, ReplyKeyboardMarkup, Update
 from telegram.ext import (CallbackContext, CommandHandler, Dispatcher, Filters,
                           MessageHandler, Updater)
 
-from .admin_panel import (is_user_admin, open_admin_panel,
+from .admin_panel import (get_main_menu, open_admin_panel,
                           show_commercial_orders, show_current_orders,
                           show_overdue_orders)
 from .bot_helpers import generate_qrcode, get_doc, read_json, write_json
@@ -65,16 +65,6 @@ def store_created_orders(orders: list, user_id: int):
         processed_orders[f'#{current_order_id}'] = order
         current_order_id += 1
     write_json(processed_orders, ORDERS_FILENAME)
-
-
-def get_main_menu(user_id: int) -> ReplyKeyboardMarkup:
-    custom_keyboard = [
-        ['Заказать аренду', 'Мои заказы'],
-        ['Правила хранения', 'Частые вопросы (FAQ)'],
-    ]
-    if is_user_admin(user_id):
-        custom_keyboard.append(['Панель администратора'])
-    return ReplyKeyboardMarkup(custom_keyboard)
 
 
 def get_hello_message() -> str:
