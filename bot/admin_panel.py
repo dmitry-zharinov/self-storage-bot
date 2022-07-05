@@ -62,32 +62,41 @@ def open_admin_panel(update: Update, context: CallbackContext):
         reply_markup=get_admin_keyboard())
 
 
-@restricted
-def show_overdue_orders(update: Update, context: CallbackContext):
-    """Показать просроченные заказы"""
-    overdue_orders = []
+def get_overdue_orders():
+    """Найти просроченные заказы"""
+    overdue_orders = dict()
     orders: dict = read_json(ORDERS_FILENAME)
     current_date = datetime.today().date()
     for order, info in orders.items():
         end_time = info.get('end_time')
         if end_time:
             if datetime.fromisoformat(end_time).date() < current_date:
-                user_id = info.get('user_id')
-                telegram_id = f'<a href="tg://user?id={user_id}">{user_id}</a>'
-                overdue_orders.append(
-                    f'<b>Заказ {order}</b>\n'
-                    f'Клиент {info.get("user_name")}\n'
-                    f'Telegram ID: {telegram_id}\n'
-                    f'Номер телефона: {info.get("feedback")}\n'
-                    f'Заказ истёк: {info.get("end_time")}\n')
-    if not overdue_orders:
+                overdue_orders[order] = info
+    return overdue_orders
+
+
+@restricted
+def show_overdue_orders(update: Update, context: CallbackContext):
+    """Показать просроченные заказы"""
+    overdue_orders_text = []
+    overdue_orders = get_overdue_orders()
+    for order, info in overdue_orders.items():
+        user_id = info.get('user_id')
+        telegram_id = f'<a href="tg://user?id={user_id}">{user_id}</a>'
+        overdue_orders_text.append(
+            f'<b>Заказ {order}</b>\n'
+            f'Клиент {info.get("user_name")}\n'
+            f'Telegram ID: {telegram_id}\n'
+            f'Номер телефона: {info.get("feedback")}\n'
+            f'Заказ истёк: {info.get("end_time")}\n')
+    if not overdue_orders_text:
         context.bot.send_message(
             chat_id=update.effective_chat.id,
             text='Нет просроченных заказов',
             parse_mode=ParseMode.HTML,
             reply_markup=get_admin_keyboard())
     else:
-        for order in overdue_orders:
+        for order in overdue_orders_text:
             context.bot.send_message(
                 chat_id=update.effective_chat.id,
                 text=order,

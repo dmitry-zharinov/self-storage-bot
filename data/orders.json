@@ -4,14 +4,19 @@
         "storage_time": "Полгода",
         "feedback": "+71234567890",
         "order_id": 1,
-        "start_time": "2022-06-02"
+        "start_time": "2022-06-02",
+        "status": 1
     },
     "#2": {
         "storage_size": "Менее половины комнаты",
         "storage_time": "Год и более",
         "feedback": "+71234567890",
         "order_id": 2,
-        "start_time": "2022-06-05"
+        "user_id": 511727477,
+        "start_time": "2022-06-05",
+        "end_time": "2022-07-08",
+        "user_name": "Петров Иван Андреевич",
+        "status": 1
     },
     "#3": {
         "storage_size": "Менее половины комнаты",
