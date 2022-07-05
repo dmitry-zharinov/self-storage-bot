@@ -9,6 +9,7 @@ from .admin_panel import (is_user_admin, open_admin_panel,
                           show_commercial_orders, show_current_orders,
                           show_overdue_orders)
 from .bot_helpers import generate_qrcode, get_doc, read_json, write_json
+from .bot_notifications import order_expired, order_expires_soon
 from .constants import (ORDERS_FILENAME, STATUS_ACTIVE, STATUS_COMPLETE,
                         STATUS_UNPAID)
 
@@ -392,6 +393,7 @@ def get_faq_text() -> str:
 
 
 def show_faq(update: Update, context: CallbackContext):
+    print(update.effective_chat.id)
     custom_keyboard = [
         ['Главное меню']
     ]
@@ -467,7 +469,6 @@ def handle_menu_actions(update: Update, context: CallbackContext):
 def launch_bot(token):
     updater = Updater(token=token, use_context=True)
     dispatcher: Dispatcher = updater.dispatcher
-
     logging.basicConfig(
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
         level=logging.INFO
@@ -479,3 +480,9 @@ def launch_bot(token):
 
     menu_actions_handler = MessageHandler(Filters.text, handle_menu_actions)
     dispatcher.add_handler(menu_actions_handler)
+
+    job_queue = updater.job_queue
+    job_queue.run_repeating(order_expired, interval=360, first=60)
+    job_queue.run_repeating(order_expires_soon, interval=360, first=60)
+
+    updater.idle()
